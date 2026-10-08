@@ -1,0 +1,13 @@
+.service-text-container {
+    display: flex;
+    flex-direction: column;
+    justify-self: start;
+    align-items: start;
+    height: 100hv;
+}
+
+.service-text{
+    font-family: "Monomakh", system-ui;
+    font-size: medium;
+    cursor: pointer;
+}
