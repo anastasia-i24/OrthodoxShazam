@@ -3,9 +3,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from pathlib import Path
 import shutil
 import subprocess
+from datetime import datetime
+import json
 
-from transcribe import transcribe, temporary
-from parser import parse_worship
+from transcribe import temporary, transcribe
+from parser import find_possible_worships, parse_worship, normalize_text
+from search import lev_check
 
 
 app = FastAPI()
@@ -53,29 +56,34 @@ async def receive_audio(audio: UploadFile = File(...)):
     print(f"WebM сохранён: {webm_path}")
     print(f"WAV сохранён: {wav_path}")
 
-    text = temporary
+    # transcribe
+    fragment = normalize_text(transcribe(wav_path))
 
-    fragments = [
-        {
-            "id": 1,
-            "title": "Литургия",
-            "text": "Благословен Бог наш, всегда, ныне и присно и во веки веков.",
-            "date": "2026-10-08"
-        },
-        {
-            "id": 2,
-            "title": "Вечерня",
-            "text": "Свете тихий святыя славы...",
-            "date": "2026-10-08"
-        },
-        {
-            "id": 3,
-            "title": "Утреня",
-            "text": "Слава Тебе, показавшему нам свет.",
-            "date": "2026-10-08"
-        }
-    ]
+    # parse n' search
+    today = datetime.today().strftime('%Y-%m-%d')
+    possible_worships = find_possible_worships(today)
 
+    fragments = []
+    for worship in possible_worships:
+        parse_worship(worship, today)
+
+        with open(f"data/texts/{worship['title']}_{today}.json", "r", encoding="utf-8") as f:
+            data = json.load(f)
+        text = normalize_text(data["text"])
+        
+        score, founded_fragment, pos = lev_check(text, fragment)
+        if score > 0.75:
+            fragments.append({
+                'date': today,
+                'title': worship['title'],
+                'text': founded_fragment,
+                'position': pos,
+                'score': score
+            })
+
+        fragments.sort(key=lambda x: x['score'], reverse=True)
+
+    
     return {
         "status": "success",
         "filename": "recording.wav",
@@ -87,7 +95,9 @@ async def receive_audio(audio: UploadFile = File(...)):
 @app.get("/api/worship")
 def get_worship(worship: str, date: str):
 
-    html = parse_worship(worship, date)
+    with open(f"data/texts/{worship}_{date}.json", "r", encoding="utf-8") as f:
+        data = json.load(f)
+    html = data["html"]
 
     return {
         "status": "success",

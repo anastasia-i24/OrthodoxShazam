@@ -1,5 +1,8 @@
 from bs4 import BeautifulSoup
 import requests
+import re
+import unicodedata
+import json
 
 URL = 'https://azbyka.ru/worships/'
 
@@ -32,12 +35,15 @@ def find_possible_worships(date: str):
     return worship_types
 
 
-def parse_worship(worship: str, date: str):
+def parse_worship(worship: dict, date: str):
     '''
-    Returns html of worship of the given type that happens on the given day
+    Returns json file with blocks, html and text 
+    of worship of the given type that happens on the given date
     '''
+    value = worship['value']
+    title = worship['title']
 
-    params = {'worship': worship, 'date': date}
+    params = {'worship': value, 'date': date}
     page = requests.get(URL, params=params)
 
     soup = BeautifulSoup(page.text, "lxml")
@@ -45,11 +51,52 @@ def parse_worship(worship: str, date: str):
     main_box = soup.find_all('div', class_='main-box')
     main_area = main_box[1].find('main', class_='main-area')
     main_area_content = main_area.find('section', class_='main-area-content worship')
-    worship_html = main_area_content.find('div', class_='article-single-content main-page-content')
+    main_page_content = main_area_content.find('div', class_='article-single-content main-page-content')
 
-    if worship_html is None:
+    if main_page_content is None:
         raise ValueError(
             "Не удалось найти текст богослужения"
         )
 
-    return str(worship_html)
+    # extracting menu
+    worship_menu = main_page_content.find('div', class_='worship_menu')
+    if worship_menu:
+        worship_menu.extract()
+
+    # html version
+    worship_html = str(main_page_content)
+
+    # normalize text for search
+    for tag in main_page_content.find_all(['strong', 'em', 'summary']):
+        tag.decompose()
+
+
+    worship_text = main_page_content.get_text()
+    
+
+    result = {
+        'html': worship_html,
+        'text': worship_text,
+        'menu': str(worship_menu)
+    }
+
+    with open(f'data/texts/{title}_{date}.json', 'w', encoding="utf-8") as f:
+        json.dump(result, f, ensure_ascii=False, indent=2)
+
+
+def normalize_text(text: str):
+    KEEP = {"\u0306", "\u0308"} #keep Й and Ё
+
+    text = text.lower()
+    text = unicodedata.normalize("NFD", text)
+    text = ''.join(
+        char for char in text 
+        if char in KEEP 
+        or unicodedata.category(char) != "Mn"
+        and (unicodedata.category(char)[0] in ("L")
+        or char.isspace())
+    )
+    text = unicodedata.normalize("NFC", text)
+    text = re.sub(r"\s+", " ", text).strip()
+
+    return text
