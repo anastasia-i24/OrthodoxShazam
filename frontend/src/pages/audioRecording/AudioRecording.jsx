@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 
-import RecordButtonImg from '../assets/mic.svg';
+import RecordButtonImg from '../../assets/mic.svg';
 
 import './AudioRecording.css';
 

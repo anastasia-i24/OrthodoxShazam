@@ -6,7 +6,7 @@ import subprocess
 from datetime import datetime
 import json
 
-from transcribe import temporary, transcribe
+from transcribe import transcribe
 from parser import find_possible_worships, parse_worship, normalize_text
 from search import lev_check
 
@@ -57,13 +57,14 @@ async def receive_audio(audio: UploadFile = File(...)):
     print(f"WAV сохранён: {wav_path}")
 
     # transcribe
-    fragment = normalize_text(temporary())
+    fragment = normalize_text(transcribe(wav_path))
 
     # parse n' search
     today = datetime.today().strftime('%Y-%m-%d')
     possible_worships = find_possible_worships(today)
 
     fragments = []
+    total_score = 0
     for worship in possible_worships:
         parse_worship(worship, today)
 
@@ -72,14 +73,14 @@ async def receive_audio(audio: UploadFile = File(...)):
         text = normalize_text(data["text"])
         
         score, founded_fragment, pos = lev_check(text, fragment)
-        if score > 0.75:
-            fragments.append({
-                'date': today,
-                'title': worship['title'],
-                'text': "..." + founded_fragment + "...",
-                'position': pos,
-                'score': score
-            })
+        total_score += score
+        fragments.append({
+            'date': today,
+            'title': worship['title'],
+            'text': "..." + founded_fragment + "...",
+            'position': pos,
+            'score': score
+        })
 
         fragments.sort(key=lambda x: x['score'], reverse=True)
 
