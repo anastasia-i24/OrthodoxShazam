@@ -8,7 +8,7 @@ import json
 
 from transcribe import transcribe
 from parser import find_possible_worships, parse_worship, normalize_text
-from search import lev_check
+from search import find_best_fragment
 
 
 app = FastAPI()
@@ -64,32 +64,36 @@ async def receive_audio(audio: UploadFile = File(...)):
     possible_worships = find_possible_worships(today)
 
     fragments = []
-    total_score = 0
     for worship in possible_worships:
         parse_worship(worship, today)
 
         with open(f"data/texts/{worship['title']}_{today}.json", "r", encoding="utf-8") as f:
             data = json.load(f)
-        text = normalize_text(data["text"])
-        
-        score, founded_fragment, pos = lev_check(text, fragment)
-        total_score += score
+
+        score, frag_id = find_best_fragment(fragment, data['fragment_map'])
+
+        display_text = data['fragment_map'].get(frag_id, "") if frag_id else ""
+
         fragments.append({
             'date': today,
             'title': worship['title'],
-            'text': "..." + founded_fragment + "...",
-            'position': pos,
-            'score': score
+            'search': display_text,
+            'fragmentId': frag_id,
+            'text': "..." + display_text[:100] + "...",
+            'score': score,
         })
 
-        fragments.sort(key=lambda x: x['score'], reverse=True)
+    best_score = max((f['score'] for f in fragments), default=0)
+    low_confidence = bool(fragments) and best_score < 0.5
+    fragments.sort(key=lambda x: x['score'], reverse=True)
+    fragments = fragments[:3]
 
-    
     return {
         "status": "success",
         "filename": "recording.wav",
-        "transcription": text,
-        "fragments": fragments
+        "transcription": fragment,
+        "fragments": fragments,
+        "lowConfidence": low_confidence,
     }
 
 

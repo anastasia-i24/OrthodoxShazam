@@ -9,6 +9,7 @@ export default function AudioRecording() {
     const [isRecording, setIsRecording] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [fragments, setFragments] = useState([]);
+    const [lowConfidence, setLowConfidence] = useState(false);
 
     const mediaRecorderRef = useRef(null);
     const audioChunksRef = useRef([]);
@@ -17,35 +18,24 @@ export default function AudioRecording() {
         setIsLoading(true);
 
         const formData = new FormData();
-
-        formData.append(
-            'audio',
-            blob,
-            'recording.webm'
-        );
+        formData.append('audio', blob, 'recording.webm');
 
         try {
             const response = await fetch('/api/audio', {
                 method: 'POST',
-                body: formData
+                body: formData,
             });
 
             if (!response.ok) {
-                throw new Error(
-                    'Ошибка при отправке аудио'
-                );
+                throw new Error('Ошибка при отправке аудио');
             }
 
             const data = await response.json();
 
             setFragments(data.fragments);
-
+            setLowConfidence(data.lowConfidence ?? false);
         } catch (error) {
-            console.error(
-                'Не удалось отправить аудио:',
-                error
-            );
-
+            console.error('Не удалось отправить аудио:', error);
         } finally {
             setIsLoading(false);
         }
@@ -53,79 +43,62 @@ export default function AudioRecording() {
 
     const startRecording = async () => {
         try {
-            const stream =
-                await navigator.mediaDevices.getUserMedia({
-                    audio: true
-                });
+            const stream = await navigator.mediaDevices.getUserMedia({
+                audio: true,
+            });
 
-            const mediaRecorder =
-                new MediaRecorder(stream);
-
-            mediaRecorderRef.current =
-                mediaRecorder;
-
+            const mediaRecorder = new MediaRecorder(stream);
+            mediaRecorderRef.current = mediaRecorder;
             audioChunksRef.current = [];
 
-            mediaRecorder.ondataavailable =
-                (event) => {
-                    if (event.data.size > 0) {
-                        audioChunksRef.current.push(
-                            event.data
-                        );
-                    }
-                };
+            mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    audioChunksRef.current.push(event.data);
+                }
+            };
 
             mediaRecorder.onstop = () => {
-                const audioBlob = new Blob(
-                    audioChunksRef.current,
-                    {
-                        type: 'audio/webm'
-                    }
-                );
+                const audioBlob = new Blob(audioChunksRef.current, {
+                    type: 'audio/webm',
+                });
 
                 sendAudio(audioBlob);
 
-                stream.getTracks().forEach(
-                    track => track.stop()
-                );
+                stream.getTracks().forEach((track) => track.stop());
             };
 
             mediaRecorder.start();
 
             setIsRecording(true);
             setFragments([]);
+            setLowConfidence(false);
 
             setTimeout(() => {
-                if (
-                    mediaRecorder.state === 'recording'
-                ) {
+                if (mediaRecorder.state === 'recording') {
                     mediaRecorder.stop();
                     setIsRecording(false);
                 }
-            }, 10000);
-
+            }, 20000);
         } catch (error) {
-            console.error(
-                'Ошибка при записи:',
-                error
-            );
-
-            alert(
-                'Не удалось получить доступ к микрофону'
-            );
+            console.error('Ошибка при записи:', error);
+            alert('Не удалось получить доступ к микрофону');
         }
     };
 
     return (
         <div className="record-button-container">
-
             <button
                 type="button"
                 className={`record-button ${isRecording ? 'recording' : ''}`}
                 onClick={startRecording}
                 disabled={isRecording || isLoading}
             >
-                <img src={RecordButtonImg} alt="Записать аудио" width="40" height="40" />
+                <img
+                    src={RecordButtonImg}
+                    alt="Записать аудио"
+                    width="40"
+                    height="40"
+                />
             </button>
 
             <p className="record-text">
@@ -133,47 +106,47 @@ export default function AudioRecording() {
                     ? 'Идёт запись...'
                     : isLoading
                         ? 'Обрабатываем запись...'
-                        : 'Нажмите для записи аудио'
-                }
+                        : 'Нажмите для записи аудио'}
             </p>
 
             {isLoading && (
-                <p className="loading-text">
-                    Ищем отрывок...
-                </p>
+                <p className="loading-text">Ищем отрывок...</p>
+            )}
+
+            {!isLoading && lowConfidence && fragments.length > 0 && (
+                <div className="low-confidence-warning">
+                    Мы не уверены, что нашли нужный отрывок. Проверьте результаты ниже или попробуйте сделать запись еще раз.
+                </div>
             )}
 
             {!isLoading && fragments.length > 0 && (
-              <div className="fragments-container">
-                  {fragments.map((fragment) => (
-                      <Link
-                          to="/service-text"
-                          state={{
-                              worship: fragment.title,
-                              date: fragment.date
-                          }}
-                          key={fragment.id}
-                      >
-                          <button className="fragment-button">
-
-                              <span className="fragment-title">
-                                  {fragment.title}
-                              </span>
-
-                              <span className="fragment-text">
-                                  {fragment.text}
-                              </span>
-
-                              <span className="fragment-date">
-                                  {fragment.date}
-                              </span>
-
-                          </button>
-                      </Link>
-                  ))}
-              </div>
+                <div className="fragments-container">
+                    {fragments.map((fragment) => (
+                        <Link
+                            to="/service-text"
+                            state={{
+                                worship: fragment.title,
+                                date: fragment.date,
+                                fragmentText: fragment.search,
+                                fragmentId: fragment.fragmentId,
+                            }}
+                            key={`${fragment.title}-${fragment.date}`}
+                        >
+                            <button className="fragment-button">
+                                <span className="fragment-title">
+                                    {fragment.title}
+                                </span>
+                                <span className="fragment-text">
+                                    {fragment.text}
+                                </span>
+                                <span className="fragment-date">
+                                    {fragment.date}
+                                </span>
+                            </button>
+                        </Link>
+                    ))}
+                </div>
             )}
-
         </div>
     );
 }

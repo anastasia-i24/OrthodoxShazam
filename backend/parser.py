@@ -61,26 +61,32 @@ def parse_worship(worship: dict, date: str):
     # extracting menu
     worship_menu = main_page_content.find('div', class_='worship_menu')
     if worship_menu:
-        worship_menu.extract()
+        worship_menu.decompose()
 
-    # html version
+    fragment_map = {}
+    counter = 0
+
+    for tag in main_page_content.find_all(
+        ['div', 'h1', 'h2', 'h3', 'h4', 'li']
+    ):
+        text = tag.get_text(strip=True)
+        if len(text) < 20:
+            continue
+        frag_id = f"frag-{counter}"
+        counter += 1
+        tag['data-fragment-id'] = frag_id
+        fragment_map[frag_id] = text
+
     worship_html = str(main_page_content)
-
-    # normalize text for search
-    for tag in main_page_content.find_all(['strong', 'em', 'summary']):
-        tag.decompose()
-
-
     worship_text = main_page_content.get_text()
-    
 
     result = {
         'html': worship_html,
         'text': worship_text,
-        'menu': str(worship_menu)
+        'fragment_map': fragment_map,
     }
 
-    with open(f'data/texts/{title}_{date}.json', 'w', encoding="utf-8") as f:
+    with open(f'data/texts/{title}_{date}.json', 'w', encoding='utf-8') as f:
         json.dump(result, f, ensure_ascii=False, indent=2)
 
 

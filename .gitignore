@@ -26,3 +26,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# ignore files inside data
+data/recordings/*
+!data/recordings/.gitkeep
+data/texts/*
+!data/texts/.gitkeep
