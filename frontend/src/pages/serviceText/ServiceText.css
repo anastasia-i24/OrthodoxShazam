@@ -1,0 +1,85 @@
+.service-text-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: 40px 20px 80px;
+    box-sizing: border-box;
+    background: linear-gradient(180deg, #f7faf7 0%, #eef5ee 100%);
+    font-family: "Monomakh", system-ui, sans-serif;
+    color: #222;
+}
+
+.service-text-container > h1 {
+    font-size: 32px;
+    margin: 0 0 8px;
+    text-align: center;
+    color: #054403;
+}
+
+.service-date {
+    font-size: 14px;
+    color: #666;
+    margin: 0 0 32px;
+    letter-spacing: 0.5px;
+}
+
+.service-text {
+    width: 100%;
+    max-width: 720px;
+    font-size: 17px;
+    line-height: 1.75;
+    color: #222;
+    background: #fff;
+    border-radius: 16px;
+    padding: 32px 36px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+}
+
+.service-text p {
+    margin: 0 0 1em;
+}
+
+.service-text h2,
+.service-text h3 {
+    color: #054403;
+    margin-top: 1.4em;
+}
+
+.service-text-container > p {
+    font-size: 16px;
+    color: #444;
+    margin-top: 40px;
+}
+
+.back-button {
+    position: fixed;          
+    top: 20px;
+    left: 20px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;              
+    background: linear-gradient(180deg, #0a8f05, #054403);
+    box-shadow: 0 6px 16px rgba(5, 68, 3, 0.35);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    z-index: 1000;
+}
+
+.back-button:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 10px 22px rgba(5, 68, 3, 0.45);
+}
+
+.back-button:active {
+    transform: scale(0.95);
+}
+
+.back-button svg {
+    display: block;
+}

@@ -57,7 +57,7 @@ async def receive_audio(audio: UploadFile = File(...)):
     print(f"WAV сохранён: {wav_path}")
 
     # transcribe
-    fragment = normalize_text(transcribe(wav_path))
+    fragment = normalize_text(temporary())
 
     # parse n' search
     today = datetime.today().strftime('%Y-%m-%d')
@@ -76,7 +76,7 @@ async def receive_audio(audio: UploadFile = File(...)):
             fragments.append({
                 'date': today,
                 'title': worship['title'],
-                'text': founded_fragment,
+                'text': "..." + founded_fragment + "...",
                 'position': pos,
                 'score': score
             })

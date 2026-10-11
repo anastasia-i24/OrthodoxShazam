@@ -2,9 +2,9 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 
-import AudioRecording from './pages/AudioRecording';
-import ServiceText from './pages/ServiceText';
-import NotFound from './pages/NotFound';
+import AudioRecording from './pages/audioRecording/AudioRecording';
+import ServiceText from './pages/serviceText/ServiceText';
+import NotFound from './pages/notFound/NotFound';
 
 import './index.css';
 

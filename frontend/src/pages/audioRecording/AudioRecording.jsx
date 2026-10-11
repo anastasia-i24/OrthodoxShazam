@@ -38,11 +38,6 @@ export default function AudioRecording() {
 
             const data = await response.json();
 
-            console.log(
-                'Ответ backend:',
-                data
-            );
-
             setFragments(data.fragments);
 
         } catch (error) {
@@ -125,17 +120,12 @@ export default function AudioRecording() {
         <div className="record-button-container">
 
             <button
-                className="record-button"
+                type="button"
+                className={`record-button ${isRecording ? 'recording' : ''}`}
                 onClick={startRecording}
-                disabled={
-                    isRecording ||
-                    isLoading
-                }
+                disabled={isRecording || isLoading}
             >
-                <img
-                    src={RecordButtonImg}
-                    alt="Записать аудио"
-                />
+                <img src={RecordButtonImg} alt="Записать аудио" width="40" height="40" />
             </button>
 
             <p className="record-text">
