@@ -51,7 +51,6 @@
     filter: grayscale(0.2);
 }
 
-/* Пульсация во время записи */
 .record-button.recording {
     animation: pulse 1.4s infinite;
 }

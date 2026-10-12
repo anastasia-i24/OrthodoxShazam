@@ -32,6 +32,8 @@ export default function AudioRecording() {
 
             const data = await response.json();
 
+            console.log("Транскрипция:", data.transcription);
+
             setFragments(data.fragments);
             setLowConfidence(data.lowConfidence ?? false);
         } catch (error) {

@@ -63,12 +63,13 @@ def parse_worship(worship: dict, date: str):
     if worship_menu:
         worship_menu.decompose()
 
+    for tag in main_page_content.find_all(['em', 'strong', 'summary']):
+        tag.decompose()
+
     fragment_map = {}
     counter = 0
 
-    for tag in main_page_content.find_all(
-        ['div', 'h1', 'h2', 'h3', 'h4', 'li']
-    ):
+    for tag in main_page_content.find_all('p'):
         text = tag.get_text(strip=True)
         if len(text) < 20:
             continue

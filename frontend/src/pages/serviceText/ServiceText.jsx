@@ -2,6 +2,8 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import './ServiceText.css';
 
+import { ScrollToTop } from './ScrollTop';
+
 export default function ServiceText() {
     const location = useLocation();
     const navigate = useNavigate();
@@ -178,14 +180,17 @@ export default function ServiceText() {
     }
 
     return (
-        <div className="service-text-container" ref={containerRef}>
-            {BackButton}
-            <h1>{worship}</h1>
-            <p className="service-date">{date}</p>
-            <div
-                className="service-text"
-                dangerouslySetInnerHTML={{ __html: html }}
-            />
-        </div>
+        <>
+            <ScrollToTop />
+            <div className="service-text-container" ref={containerRef}>
+                {BackButton}
+                <h1>{worship}</h1>
+                <p className="service-date">{date}</p>
+                <div
+                    className="service-text"
+                    dangerouslySetInnerHTML={{ __html: html }}
+                />
+            </div>
+        </>
     );
 }

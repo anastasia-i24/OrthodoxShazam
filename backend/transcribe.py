@@ -1,4 +1,5 @@
 import torch
+import librosa
 from transformers import (
     WhisperProcessor,
     WhisperForConditionalGeneration,
@@ -18,7 +19,6 @@ model.eval()
 
 
 def transcribe(audio_path: str) -> str:
-    import librosa
 
     audio, _ = librosa.load(
         audio_path,
